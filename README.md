@@ -1,17 +1,18 @@
 # codex-assignment
 
-Hello-world HTTP service deployed to a local minikube cluster — installable via Helm or as a gitops sync via ArgoCD.
+Hello-world HTTP service deployed to a local minikube cluster — installable via Helm or as a gitops sync via ArgoCD. Helm values are rendered from a Terraform module so per-environment knobs live in code, not hand-edited YAML.
 
 ## prerequisites
 
 ```bash
-brew install minikube kubectl helm
+brew install minikube kubectl helm terraform
 ```
 
 ## layout
 
 ```
 helm/                 # the helm chart (Deployment + Service + readiness probe)
+modules/app/          # terraform module — renders a helm values file from 4 inputs
 argocd/               # ArgoCD Application manifest
 README.md
 ```
@@ -80,6 +81,37 @@ kubectl port-forward -n argocd svc/argocd-server 8080:443
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 # open https://localhost:8080  (user: admin)
 ```
+
+## terraform module
+
+`modules/app/` takes 4 inputs (name, image, replicas, port) and renders a Helm values file.
+
+quick test:
+
+```bash
+cd modules/app
+terraform init
+terraform apply \
+  -var 'name=hello-world-codex-assignment' \
+  -var 'image=hashicorp/http-echo:1.0.0' \
+  -var 'replicas=2' \
+  -var 'port=5678' \
+  -var 'values_output_path=/tmp/test-values.yaml'
+
+cat /tmp/test-values.yaml
+```
+
+clean up:
+```bash
+terraform destroy -auto-approve \
+  -var 'name=hello-world-codex-assignment' \
+  -var 'image=hashicorp/http-echo:1.0.0' \
+  -var 'replicas=2' \
+  -var 'port=5678' \
+  -var 'values_output_path=/tmp/test-values.yaml'
+```
+
+(terragrunt wraps this so you don't pass `-var` flags manually — coming next.)
 
 ## cleanup
 
