@@ -1,19 +1,19 @@
 variable "name" {
-  type        = string
+  type = string
 }
 
 variable "image" {
-  type        = string
+  type = string
 }
 
 variable "replicas" {
-  type        = number
+  type = number
 }
 
 variable "port" {
-  type        = number
+  type = number
 }
 
 variable "values_output_path" {
-  type        = string
+  type = string
 }
