@@ -1,79 +1,91 @@
 # codex-assignment
 
-Hello-world HTTP service deployed to a local minikube cluster — installable via Helm or as a gitops sync via ArgoCD. Helm values are rendered from a Terraform module so per-environment knobs live in code, not hand-edited YAML.
+Hello-world HTTP service. Deployed to a local minikube cluster via ArgoCD. Helm values are rendered from a Terraform module driven by Terragrunt.
 
 ## prerequisites
 
 ```bash
-brew install minikube kubectl helm terraform
+brew install minikube kubectl helm terraform terragrunt
 ```
 
 ## layout
 
 ```
-helm/                 # the helm chart (Deployment + Service + readiness probe)
-modules/app/          # terraform module — renders a helm values file from 4 inputs
-argocd/               # ArgoCD Application manifest
-README.md
+helm/                # the helm chart (Deployment + Service + readiness probe)
+modules/app/         # terraform module — renders a helm values file from 4 inputs
+envs/dev/app/        # terragrunt config — dev-environment inputs
+argocd/              # ArgoCD Application manifest
 ```
 
-## quick local test
+## deploy from scratch
 
-Sanity-check the chart on its own.
+### 1. clone
+
+```bash
+git clone https://github.com/DanielLuponenko/codex-assignment.git
+cd codex-assignment
+```
+
+### 2. start minikube
 
 ```bash
 minikube start
-helm install hello helm
 ```
 
-wait for the pod to be Running:
-```bash
-kubectl get pods -w
-```
+### 3. install argocd
 
-then:
-```bash
-kubectl port-forward svc/hello-world-codex-assignment 5678:5678
-curl http://localhost:5678/
-```
-
-clean up:
-```bash
-helm uninstall hello
-```
-
-## argocd
-
-install argocd into the cluster:
 ```bash
 kubectl create namespace argocd
 kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 # --server-side avoids the "annotations too long" error on the ApplicationSet CRD
-```
 
-wait for argocd to come up:
-```bash
 kubectl wait --for=condition=Available deployment --all -n argocd --timeout=300s
 ```
 
-apply the application — argocd will pull the chart from this repo:
+### 4. apply the application
+
 ```bash
 kubectl apply -f argocd/application.yaml
-```
-
-watch it sync (look for `Synced` + `Healthy`):
-```bash
 kubectl get application -n argocd -w
 ```
 
-verify and curl:
+wait for `Synced` + `Healthy`.
+
+### 5. verify
+
 ```bash
 kubectl get pods -n hello-app
 kubectl port-forward -n hello-app svc/hello-world-codex-assignment 5678:5678
 curl http://localhost:5678/
+# → Hello World
 ```
 
-### argocd UI (optional)
+## changing dev values (terragrunt)
+
+Per-env knobs (name, image, replicas, port) live in `envs/dev/app/terragrunt.hcl`. To change them:
+
+1. edit the input you want, e.g. bump `replicas`
+2. re-render the values file:
+   ```bash
+   cd envs/dev/app
+   terragrunt apply
+   ```
+3. commit + push so argocd sees it:
+   ```bash
+   cd -
+   git add envs/dev/app/terragrunt.hcl helm/values-dev.yaml
+   git commit -m "scale dev replicas"
+   git push
+   ```
+4. force argocd to refresh now (or wait ~3 min for the next poll):
+   ```bash
+   kubectl annotate app -n argocd hello-world-codex-assignment \
+     argocd.argoproj.io/refresh=normal --overwrite
+   ```
+
+helm merges `values.yaml` (chart defaults) with `values-dev.yaml` (rendered overrides) — second file wins on conflicting keys.
+
+## argocd UI (optional)
 
 ```bash
 kubectl port-forward -n argocd svc/argocd-server 8080:443
@@ -81,37 +93,6 @@ kubectl port-forward -n argocd svc/argocd-server 8080:443
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 # open https://localhost:8080  (user: admin)
 ```
-
-## terraform module
-
-`modules/app/` takes 4 inputs (name, image, replicas, port) and renders a Helm values file.
-
-quick test:
-
-```bash
-cd modules/app
-terraform init
-terraform apply \
-  -var 'name=hello-world-codex-assignment' \
-  -var 'image=hashicorp/http-echo:1.0.0' \
-  -var 'replicas=2' \
-  -var 'port=5678' \
-  -var 'values_output_path=/tmp/test-values.yaml'
-
-cat /tmp/test-values.yaml
-```
-
-clean up:
-```bash
-terraform destroy -auto-approve \
-  -var 'name=hello-world-codex-assignment' \
-  -var 'image=hashicorp/http-echo:1.0.0' \
-  -var 'replicas=2' \
-  -var 'port=5678' \
-  -var 'values_output_path=/tmp/test-values.yaml'
-```
-
-(terragrunt wraps this so you don't pass `-var` flags manually — coming next.)
 
 ## cleanup
 
