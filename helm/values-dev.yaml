@@ -1,0 +1,4 @@
+name: hello-world-codex-assignment
+image: hashicorp/http-echo:1.0.0
+replicas: 2
+port: 5678
