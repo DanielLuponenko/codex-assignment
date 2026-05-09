@@ -15,9 +15,6 @@ spec:
       containers:
         - name: app
           image: {{ .Values.image }}
-          args:
-            - "-text=Hello World"
-            - "-listen=:{{ .Values.port }}"
           ports:
             - name: http
               containerPort: {{ .Values.port }}
@@ -34,3 +31,10 @@ spec:
               port: http
             initialDelaySeconds: 2
             periodSeconds: 5
+          volumeMounts:
+            - name: html
+              mountPath: /usr/share/nginx/html
+      volumes:
+        - name: html
+          configMap:
+            name: {{ .Values.name }}-html

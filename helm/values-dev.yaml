@@ -1,4 +1,4 @@
 name: hello-world-codex-assignment
-image: hashicorp/http-echo:1.0.0
+image: nginx:alpine
 replicas: 1
-port: 5678
+port: 80

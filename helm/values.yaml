@@ -1,7 +1,7 @@
 name: hello-world-codex-assignment
-image: hashicorp/http-echo:1.0.0
-replicas: 2
-port: 5678
+image: nginx:alpine
+replicas: 1
+port: 80
 networkPolicy:
   enabled: true
 resources:

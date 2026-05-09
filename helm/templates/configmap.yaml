@@ -1,0 +1,98 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-html
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Hello World</title>
+      <style>
+        body {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          margin: 0;
+          font-family: -apple-system, system-ui, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+        h1 {
+          font-size: 3.5em;
+          margin: 0 0 1em 0;
+          text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .stage {
+          position: relative;
+          width: 500px;
+          height: 220px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+        a.button {
+          padding: 0.8em 2em;
+          font-size: 1.4em;
+          font-weight: bold;
+          background: #ff5722;
+          color: white;
+          text-decoration: none;
+          border-radius: 10px;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+          transition: transform 0.15s ease, background 0.15s ease;
+          z-index: 10;
+        }
+        a.button:hover {
+          background: #e64a19;
+          transform: scale(1.05);
+        }
+        .arrow {
+          position: absolute;
+          font-size: 3em;
+          line-height: 1;
+          color: #fff;
+          text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        .arrow.top    { top: 0;    left: 50%; }
+        .arrow.bottom { bottom: 0; left: 50%; }
+        .arrow.left   { left: 0;   top: 50%;  }
+        .arrow.right  { right: 0;  top: 50%;  }
+
+        .arrow.top    { animation: bounce-down  0.9s ease-in-out infinite; }
+        .arrow.bottom { animation: bounce-up    0.9s ease-in-out infinite; }
+        .arrow.left   { animation: bounce-right 0.9s ease-in-out infinite; }
+        .arrow.right  { animation: bounce-left  0.9s ease-in-out infinite; }
+
+        @keyframes bounce-down {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%      { transform: translateX(-50%) translateY(18px); }
+        }
+        @keyframes bounce-up {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%      { transform: translateX(-50%) translateY(-18px); }
+        }
+        @keyframes bounce-right {
+          0%, 100% { transform: translateY(-50%) translateX(0); }
+          50%      { transform: translateY(-50%) translateX(18px); }
+        }
+        @keyframes bounce-left {
+          0%, 100% { transform: translateY(-50%) translateX(0); }
+          50%      { transform: translateY(-50%) translateX(-18px); }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Hello World</h1>
+      <div class="stage">
+        <span class="arrow top">&#11015;</span>
+        <span class="arrow bottom">&#11014;</span>
+        <span class="arrow left">&#10145;</span>
+        <span class="arrow right">&#11013;</span>
+        <a class="button" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">CLICK ME</a>
+      </div>
+    </body>
+    </html>

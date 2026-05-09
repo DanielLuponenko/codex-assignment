@@ -4,8 +4,8 @@ terraform {
 
 inputs = {
   name               = "hello-world-codex-assignment"
-  image              = "hashicorp/http-echo:1.0.0"
+  image              = "nginx:alpine"
   replicas           = 1
-  port               = 5678
+  port               = 80
   values_output_path = "${get_repo_root()}/helm/values-dev.yaml"
 }
