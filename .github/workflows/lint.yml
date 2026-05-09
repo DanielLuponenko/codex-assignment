@@ -1,0 +1,23 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - run: helm lint helm
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - run: terraform fmt -check -recursive modules/
+
+      - working-directory: modules/app
+        run: |
+          terraform init -backend=false
+          terraform validate
